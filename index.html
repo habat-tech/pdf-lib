@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منقذ التقييمات - Evaluation Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- مكتبة pdf-lib للتعديل على ملفات الـ PDF الأصلية -->
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-8 border-t-4 border-blue-600">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">منقذ التقييمات 📄🚀</h1>
+            <p class="text-gray-500">ارحم صاحبك واعمل الـ Evaluation بتاعك بنفسك!</p>
+        </div>
+
+        <div class="space-y-6">
+            <!-- 1. Select Area -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">1. اختار التقييم (Area)</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="area" value="nursery.pdf" class="peer sr-only" checked>
+                        <div class="p-3 border rounded-lg text-center peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 hover:bg-gray-50 transition font-semibold">
+                            Nursery Area
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="area" value="neonate.pdf" class="peer sr-only">
+                        <div class="p-3 border rounded-lg text-center peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 hover:bg-gray-50 transition font-semibold">
+                            Neonate Area
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="area" value="medical.pdf" class="peer sr-only">
+                        <div class="p-3 border rounded-lg text-center peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 hover:bg-gray-50 transition font-semibold">
+                            Medical Surgical
+                        </div>
+                    </label>
+                </div>
+                <p class="text-xs text-red-500 mt-2">*تأكد من وجود ملفات الـ PDF بنفس هذه الأسماء بجوار ملف الموقع.</p>
+            </div>
+
+            <!-- 2. Upload Photo -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">2. ارفع صورتك الشخصية</label>
+                <div class="flex items-center justify-center w-full">
+                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 border-gray-300">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                            </svg>
+                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">اضغط لرفع الصورة</span></p>
+                            <p class="text-xs text-gray-500">PNG, JPG</p>
+                        </div>
+                        <input id="photo-upload" type="file" class="hidden" accept="image/png, image/jpeg" onchange="handleImageUpload(event)" />
+                    </label>
+                </div>
+                <!-- Image Preview -->
+                <div id="image-preview-container" class="hidden mt-4 text-center">
+                    <p class="text-xs text-green-600 mb-2 font-bold">تم رفع الصورة بنجاح ✅</p>
+                    <img id="image-preview" src="" alt="Preview" class="mx-auto h-32 w-24 object-cover border-2 border-gray-300 rounded shadow-sm">
+                </div>
+            </div>
+
+            <!-- 3. Photo Position -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">3. مكان الصورة في الورقة</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="position" value="right" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" checked>
+                        <span class="mr-2 text-gray-700">أعلى اليمين</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="position" value="left" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500">
+                        <span class="mr-2 text-gray-700">أعلى اليسار</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 4. File Name -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">4. اسم الملف (اختياري)</label>
+                <input type="text" id="filename" placeholder="مثال: Ahmed_Ali_Eval" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" dir="ltr">
+            </div>
+
+            <!-- Action Button -->
+            <button onclick="generatePDF()" id="generate-btn" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-bold rounded-lg text-lg px-5 py-3.5 text-center transition flex justify-center items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                دمج الصورة وتحميل الـ PDF
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let uploadedImageFile = null;
+
+        // Handle Image Upload and show preview
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                uploadedImageFile = file;
+                const previewImg = document.getElementById('image-preview');
+                const previewContainer = document.getElementById('image-preview-container');
+                
+                previewImg.src = URL.createObjectURL(file);
+                previewContainer.classList.remove('hidden');
+            }
+        }
+
+        // Generate and Modify PDF
+        async function generatePDF() {
+            if (!uploadedImageFile) {
+                alert('يا ريس نسيت ترفع الصورة! ارفع صورتك الأول.');
+                return;
+            }
+
+            const btn = document.getElementById('generate-btn');
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = 'جاري التجهيز... ⏳';
+            btn.disabled = true;
+            btn.classList.add('opacity-70');
+
+            try {
+                // 1. Get Selections
+                const selectedPdfFile = document.querySelector('input[name="area"]:checked').value;
+                const photoPosition = document.querySelector('input[name="position"]:checked').value;
+                const customName = document.getElementById('filename').value.trim();
+                
+                // 2. Fetch the original PDF from the server/github pages
+                const existingPdfBytes = await fetch(selectedPdfFile).then(res => {
+                    if (!res.ok) throw new Error(`مش قادر ألاقي ملف ${selectedPdfFile}، اتأكد إنك رافعه جنب الموقع وبنفس الاسم بالظبط!`);
+                    return res.arrayBuffer();
+                });
+
+                // 3. Load PDF
+                const { PDFDocument } = PDFLib;
+                const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                const pages = pdfDoc.getPages();
+                const firstPage = pages[0]; // بنعدل على أول صفحة بس
+
+                // 4. Fetch the Image Bytes
+                const imageBytes = await uploadedImageFile.arrayBuffer();
+                
+                // 5. Embed Image based on type (PNG or JPG)
+                let embeddedImage;
+                if (uploadedImageFile.type === 'image/png') {
+                    embeddedImage = await pdfDoc.embedPng(imageBytes);
+                } else if (uploadedImageFile.type === 'image/jpeg' || uploadedImageFile.type === 'image/jpg') {
+                    embeddedImage = await pdfDoc.embedJpg(imageBytes);
+                } else {
+                    throw new Error("صيغة الصورة غير مدعومة، يرجى رفع PNG أو JPG");
+                }
+
+                // 6. Calculate Image Dimensions and Position
+                const { width, height } = firstPage.getSize();
+                
+                // مقاس الصورة (بالتقريب مقاس صورة شخصية 4x6)
+                const imgDims = embeddedImage.scale(0.3); // ممكن نعدل الـ Scale لو الصورة بتطلع كبيرة أوي أو صغيرة
+                const finalImgWidth = 85; 
+                const finalImgHeight = 110;
+
+                // إحداثيات Y (من تحت لفوق في الـ PDF)
+                const yPosition = height - finalImgHeight - 40; // 40 بيكسل مسافة من فوق
+
+                // إحداثيات X
+                let xPosition;
+                if (photoPosition === 'right') {
+                    xPosition = width - finalImgWidth - 50; // 50 بيكسل مسافة من اليمين
+                } else {
+                    xPosition = 50; // 50 بيكسل مسافة من الشمال
+                }
+
+                // 7. Draw the image on the PDF
+                firstPage.drawImage(embeddedImage, {
+                    x: xPosition,
+                    y: yPosition,
+                    width: finalImgWidth,
+                    height: finalImgHeight,
+                });
+
+                // 8. Serialize the PDF Document to bytes (a Uint8Array)
+                const pdfBytes = await pdfDoc.save();
+
+                // 9. Trigger Download
+                const fileName = customName !== '' ? `${customName}.pdf` : `Eval_${selectedPdfFile}`;
+                const blob = new Blob([pdfBytes], { type: "application/pdf" });
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = fileName;
+                link.click();
+
+            } catch (error) {
+                console.error(error);
+                alert('حصل مشكلة: ' + error.message);
+            } finally {
+                // Reset Button
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-70');
+            }
+        }
+    </script>
+</body>
+</html>
